@@ -19,6 +19,7 @@ $app->group('/table', function () use ($app) {
 
 // User Routes
 $app->group('/users', function () use ($app) {
+	$app->post("/login", 	"App\Controllers\UsersController:login");
 	$app->post("/fetch", 	"App\Controllers\UsersController:fetchUsers");
 	$app->post("/create", 	"App\Controllers\UsersController:createUser");
 	/*
@@ -28,7 +29,7 @@ $app->group('/users', function () use ($app) {
 	*/
 });
 
-// Todo Routes
+// Todos Routes
 $app->group('/todos', function () use ($app) {
 	$app->post("/fetch", 	"App\Controllers\TodosController:fetch");
 	$app->post("/add", 		"App\Controllers\TodosController:add");

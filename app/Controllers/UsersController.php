@@ -12,8 +12,14 @@ class UsersController{
 		
 	}
 
-	public function fetchUsers($request, $response, $args)
-	{	
+	public function login($request, $response, $args) {
+		$params = $request->getParsedBody();
+
+		var_dump($params);
+	}
+
+	public function fetchUsers($request, $response, $args) {	
+
 		$params = $request->getParsedBody();
 		$offset = ($params['page']) * $params['pageSize'];
 		$users = new Users();
@@ -32,8 +38,8 @@ class UsersController{
 		]);
 	}
 
-	public function createUser($request, $response, $args)
-	{
+	public function createUser($request, $response, $args) {
+
 		$params = $request->getParsedBody();
 
 		$table = new Users;
