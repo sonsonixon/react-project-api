@@ -13,9 +13,34 @@ class UsersController{
 	}
 
 	public function login($request, $response, $args) {
+
 		$params = $request->getParsedBody();
 
 		var_dump($params);
+
+		$params = $request->getParsedBody();
+		$user = $this->authenticate($params);
+
+	}
+
+	public function authenticate($params) {
+
+		$username = $params['data']['username'];
+		$password = $params['data']['password'];
+
+		$users = new Users;
+		$hidden = $users->getHidden();
+
+		$user = $users->where('username', $username)->first();
+
+		if(!$user) {
+			var_dump('no user found');
+		}
+
+		$match = $user->checkPassword($password);
+
+		var_dump($user);
+
 	}
 
 	public function fetchUsers($request, $response, $args) {	
@@ -42,10 +67,10 @@ class UsersController{
 
 		$params = $request->getParsedBody();
 
-		$table = new Users;
+		$users = new Users;
 		
-		if($table->validate($params['data'])){
-			$table->save();
+		if($users->validate($params['data'])){
+			$users->save();
 		}
 		else{
 			return $response->withJSON(["code" => "error", "module" => "users", "errors" => $table->errors()]);
