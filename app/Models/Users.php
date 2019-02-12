@@ -43,11 +43,17 @@ class Users extends Model {
         $publicKey = openssl_pkey_get_public("file://".__DIR__."/../../keys/id_rsa_jwt.pub");
 
         $payload = array(
-            "typ" => "JWT",
-            "alg" => "HS256",
-            "iss" => "React Project",
-            "aud" => "http://localhost:3000",
-            "iat" => 1356999524
+
+            /*** List of possible token claims ***/
+
+            "typ" => "JWT",                   // type -> header
+            "alg" => "HS256",                 // algorithm -> header
+            "iss" => "React Project",         // issuer -> payload
+            "aud" => "http://localhost:3000", // audience -> payload
+            "iat" => 1356999524               // issued at -> payload
+            "exp" => '',                      // expiration time -> payload
+            "sub" => '',                      // subject -> payload
+            "auth_time" => '',                // authentication time -> payload
         );
 
         $token = JWT::encode($payload, $privateKey, 'RS256');
