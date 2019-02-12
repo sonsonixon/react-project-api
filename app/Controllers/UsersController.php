@@ -16,10 +16,12 @@ class UsersController{
 
 		$params = $request->getParsedBody();
 
-		var_dump($params);
-
 		$params = $request->getParsedBody();
 		$user = $this->authenticate($params);
+
+		$token = $user->generateToken();
+
+		var_dump($token);
 
 	}
 
@@ -33,13 +35,13 @@ class UsersController{
 
 		$user = $users->where('username', $username)->first();
 
-		if(!$user) {
+		/*if(!$user) {
 			var_dump('no user found');
-		}
+		}*/
 
 		$match = $user->checkPassword($password);
 
-		var_dump($user);
+		return $user;
 
 	}
 

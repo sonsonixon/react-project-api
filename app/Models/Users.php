@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use ValidatorFactory;
 
+use \Firebase\JWT\JWT;
+
+/**** DEPRECATED DEPENDECY ****/
+// use Namshi\JOSE\SimpleJWS;
+
 class Users extends Model {
 
 	use SoftDeletes;
@@ -31,18 +36,44 @@ class Users extends Model {
 
     public function generateToken() {
 
-        $jws  = new SimpleJWS(array(
-            'alg' => 'RS256'
-        ));
-        $jws->setPayload(array(
-            'user' => $this->toJson(),
-        ));
+        /*** Firebase/PHP-JWT ***/
 
-        $privateKey = \openssl_pkey_get_private("file://".__DIR__."/../../key/mykey.private", 'john');
- 
-        $jws->sign($privateKey);
-        
-        return $jws->getTokenString();
+        $privateKey = openssl_pkey_get_private("file://".__DIR__."/../../keys/id_rsa_jwt.pem");
+
+        $publicKey = openssl_pkey_get_public("file://".__DIR__."/../../keys/id_rsa_jwt.pub");
+
+        $payload = array(
+            "typ" => "JWT",
+            "alg" => "HS256",
+            "iss" => "React Project",
+            "aud" => "http://localhost:3000",
+            "iat" => 1356999524
+        );
+
+        $token = JWT::encode($payload, $privateKey, 'RS256');
+
+        $decoded = JWT::decode($token, $publicKey, array('RS256'));
+
+        $decoded_array = (array) $decoded;
+
+        return $decoded_array;
+
+        /*** DEPRECATED DEPENDECY ***/
+        /*** Namshi/JOSE/SimpleJWS ***/
+        /**
+         * $jws  = new SimpleJWS(array(
+         *      'alg' => 'RS256'
+         * ));
+         * $jws->setPayload(array(
+         *      'user' => $this->toJson(),
+         * ));
+         *
+         * $privateKey = \openssl_pkey_get_private("file://".__DIR__."/../../keys/privateKey.private", 'sonsonixon');
+         *
+         * $jws->sign($privateKey);
+         *
+         * return $jws->getTokenString(); 
+        */
     }
 
     public function validate($data, $rules = null) {
