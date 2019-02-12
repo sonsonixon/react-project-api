@@ -21,6 +21,7 @@ $app->group('/table', function () use ($app) {
 $app->group('/users', function () use ($app) {
 	$app->post("/fetch", 	"App\Controllers\UsersController:fetchUsers");
 	$app->post("/create", 	"App\Controllers\UsersController:createUser");
+	$app->post("/login", 	"App\Controllers\UsersController:login");
 	/*
 	$app->post("", 			"App\Controllers\TableController:add");
 	$app->post("/{id}", 	"App\Controllers\TableController:update");

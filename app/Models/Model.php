@@ -25,13 +25,12 @@ class Model extends \Illuminate\Database\Eloquent\Model {
         $v = $factory->make($data, $this->rules);
 
         if($v->passes()){
-        	 foreach ($data as $key => $value) {
-        	 	$this->{$key} = $value;
-        	 }
+            foreach ($data as $key => $value) {
+                $this->{$key} = $value;
+            }
         }else{
         	$this->errors = $v->errors();
         }
-
 
         return $v->passes();
     }
