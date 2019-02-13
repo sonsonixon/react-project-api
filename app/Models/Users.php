@@ -38,31 +38,38 @@ class Users extends Model {
 
         /*** Firebase/PHP-JWT ***/
 
-        $privateKey = openssl_pkey_get_private("file://".__DIR__."/../../keys/id_rsa_jwt.pem");
+        //$publicKey = openssl_pkey_get_public("file://".__DIR__."/../../keys/id_rsa_jwt.pub");
+        //$decoded = JWT::decode($token, $publicKey, array('RS256'));
+        //$decoded_array = (array) $decoded;
 
-        $publicKey = openssl_pkey_get_public("file://".__DIR__."/../../keys/id_rsa_jwt.pub");
+        /*** List of possible token payload claims
+         * "typ" => type -> header
+         * "alg" => algorithm -> header
+         * "iss" => issuer -> payload
+         * "aud" => audience -> payload
+         * "iat" => issue at -> payload
+         * "exp" => expiration time -> payload
+         * "auth_time" => authentication time -> payload
+        ***/
+
+        /*** Note: 
+         * You can add public claims like user ID, name or email in the payload claims.
+         * You can also add private claim names. These are subject to collision, so use them with caution.
+        ***/
 
         $payload = array(
-
-            /*** List of possible token claims ***/
-
-            "typ" => "JWT",                   // type -> header
-            "alg" => "HS256",                 // algorithm -> header
-            "iss" => "React Project",         // issuer -> payload
-            "aud" => "http://localhost:3000", // audience -> payload
-            "iat" => 1356999524               // issued at -> payload
-            "exp" => '',                      // expiration time -> payload
-            "sub" => '',                      // subject -> payload
-            "auth_time" => '',                // authentication time -> payload
+            "typ" => "JWT",
+            "alg" => "RS256",
+            "iss" => "React Project",
+            "aud" => "http://localhost:3000",
+            "iat" => 1356999524
         );
+
+        $privateKey = openssl_pkey_get_private("file://".__DIR__."/../../keys/id_rsa_jwt.pem");
 
         $token = JWT::encode($payload, $privateKey, 'RS256');
 
-        $decoded = JWT::decode($token, $publicKey, array('RS256'));
-
-        $decoded_array = (array) $decoded;
-
-        return $decoded_array;
+        return $token;
 
         /*** DEPRECATED DEPENDECY ***/
         /*** Namshi/JOSE/SimpleJWS ***/
@@ -79,7 +86,7 @@ class Users extends Model {
          * $jws->sign($privateKey);
          *
          * return $jws->getTokenString(); 
-        */
+        **/
     }
 
     public function validate($data, $rules = null) {

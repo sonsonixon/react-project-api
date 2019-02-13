@@ -15,14 +15,23 @@ class UsersController{
 	public function login($request, $response, $args) {
 
 		$params = $request->getParsedBody();
-
-		$params = $request->getParsedBody();
 		$user = $this->authenticate($params);
 
+		if (is_numeric($user)) {
+			switch($user) {
+				case 400:
+					return $response->withJSON(["code" => "error", "title" => "Login Error", "message" => "Password not match"]);
+					break;
+				case 404:
+					return $response->withJSON(["code" => "error", "title" => "Login Error", "message" => "Credentials not found"]);
+					break;
+				default:
+					// do nothing
+			}
+		}
+
 		$token = $user->generateToken();
-
-		var_dump($token);
-
+		return $response->withJSON(["code" => "success", "token" => $token, "data" => $user]);
 	}
 
 	public function authenticate($params) {
@@ -30,19 +39,20 @@ class UsersController{
 		$username = $params['data']['username'];
 		$password = $params['data']['password'];
 
-		$users = new Users;
-		$hidden = $users->getHidden();
+		$user = new Users;
+		$user = $user->where('username', $username)->first();
 
-		$user = $users->where('username', $username)->first();
-
-		/*if(!$user) {
-			var_dump('no user found');
-		}*/
+		if(!$user) {
+			return 404;
+		}
 
 		$match = $user->checkPassword($password);
 
-		return $user;
-
+		if($match) {
+			return $user;
+		} else {
+			return 400;
+		}
 	}
 
 	public function fetchUsers($request, $response, $args) {	
