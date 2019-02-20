@@ -38,9 +38,9 @@ class Users extends Model {
 
         /*** Firebase/PHP-JWT ***/
 
-        //$publicKey = openssl_pkey_get_public("file://".__DIR__."/../../keys/id_rsa_jwt.pub");
-        //$decoded = JWT::decode($token, $publicKey, array('RS256'));
-        //$decoded_array = (array) $decoded;
+        // $publicKey = openssl_pkey_get_public("file://".__DIR__."/../../keys/id_rsa_jwt.pub");
+        // $decoded = JWT::decode($token, $publicKey, array('RS256'));
+        // $decoded_array = (array) $decoded;
 
         /*** List of possible token payload claims
          * "typ" => type -> header
