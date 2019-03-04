@@ -3,14 +3,11 @@ namespace App\Controllers;
 
 use App\Models\Users;
 
+// use Webpatser\Uuid\Uuid;
+
 class UsersController{
 
 	// protected $dates = ['deleted_at'];
-
-	public function __construct()
-	{
-		
-	}
 
 	public function login($request, $response, $args) {
 
@@ -30,7 +27,8 @@ class UsersController{
 			}
 		}
 
-		$token = $user->generateToken();
+		$token = $user->generateToken($user->uid);
+		//var_dump($token);
 		return $response->withJSON(["code" => "success", "token" => $token, "data" => $user]);
 	}
 
@@ -80,12 +78,15 @@ class UsersController{
 		$params = $request->getParsedBody();
 
 		$users = new Users;
+
+		// $uid = (string) Uuid::generate(4);
+		// $params['data']['uid'] = $uid;
 		
 		if($users->validate($params['data'])){
 			$users->save();
 		}
 		else{
-			return $response->withJSON(["code" => "error", "module" => "users", "errors" => $table->errors()]);
+			return $response->withJSON(["code" => "error", "module" => "users", "errors" => $users->errors()]);
 		}
 
 		return $response->withJSON(["code" => "success", "title" => "Success", "message" => "User has been successfully created"]);

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use ValidatorFactory;
+use App\Traits\Uuids;
 
 use \Firebase\JWT\JWT;
 
@@ -14,11 +15,16 @@ use \Firebase\JWT\JWT;
 class Users extends Model {
 
 	use SoftDeletes;
+    use Uuids;
 
-	protected $table;
-	protected $guarded = ['user_id'];
-    public    $hidden = ['password', 'deleted_at'];
+    protected $primaryKey = 'uid';
+	protected $table = "users";
+    protected $keyType = 'string';
+    protected $guarded = ['uid'];
+    protected $fillable = ['uid'];
+    public    $hidden  = ['uid', 'password', 'deleted_at', 'updated_at'];
     public    $timestamps = true;
+    public    $incrementing = false;
     protected $errors;
     protected $rules = [
 		"first_name"  => "required|alpha_spaces|max:100",
@@ -34,7 +40,7 @@ class Users extends Model {
         return password_verify($password, $this->password);
     }
 
-    public function generateToken() {
+    public function generateToken($uid) {
 
         /*** Firebase/PHP-JWT ***/
 
@@ -57,12 +63,16 @@ class Users extends Model {
          * You can also add private claim names. These are subject to collision, so use them with caution.
         ***/
 
+        $current_time = time();
+
         $payload = array(
             "typ" => "JWT",
             "alg" => "RS256",
             "iss" => "React Project",
             "aud" => "http://localhost:3000",
-            "iat" => 1356999524
+            "iat" => $current_time,
+            "exp" => $current_time+(60*60), // expires in 1 hour
+            "uid" => $uid,
         );
 
         $privateKey = openssl_pkey_get_private("file://".__DIR__."/../../keys/id_rsa_jwt.pem");
