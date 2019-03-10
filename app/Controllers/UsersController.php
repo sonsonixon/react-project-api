@@ -2,12 +2,13 @@
 namespace App\Controllers;
 
 use App\Models\Users;
-
-// use Webpatser\Uuid\Uuid;
+use ValidatorFactory;
 
 class UsersController{
 
 	// protected $dates = ['deleted_at'];
+
+	protected $validator;
 
 	public function login($request, $response, $args) {
 
@@ -27,9 +28,8 @@ class UsersController{
 			}
 		}
 
-		$token = $user->generateToken($user->uid);
-		//var_dump($token);
-		return $response->withJSON(["code" => "success", "token" => $token, "data" => $user]);
+		$token = $user->generateToken($user->uuid);
+		return $response->withJSON(["code" => "success", "token" => $token, "uuid" => $user->uuid]);
 	}
 
 	public function authenticate($params) {
@@ -37,8 +37,8 @@ class UsersController{
 		$username = $params['data']['username'];
 		$password = $params['data']['password'];
 
-		$user = new Users;
-		$user = $user->where('username', $username)->first();
+		$users = new Users;
+		$user = $users->where('username', $username)->first();
 
 		if(!$user) {
 			return 404;
@@ -68,7 +68,7 @@ class UsersController{
 					   ->get();
 					   
 		return $response->withJSON([
-			'rows' => $users,
+			'rows'  => $users,
 			'pages' => $pages
 		]);
 	}
@@ -76,54 +76,88 @@ class UsersController{
 	public function createUser($request, $response, $args) {
 
 		$params = $request->getParsedBody();
-
 		$users = new Users;
-
-		// $uid = (string) Uuid::generate(4);
-		// $params['data']['uid'] = $uid;
 		
 		if($users->validate($params['data'])){
 			$users->save();
 		}
 		else{
-			return $response->withJSON(["code" => "error", "module" => "users", "errors" => $users->errors()]);
+			return $response->withJSON([
+				"code" => "error", 
+				"module" => "users", 
+				"errors" => $users->errors()
+			]);
 		}
 
-		return $response->withJSON(["code" => "success", "title" => "Success", "message" => "User has been successfully created"]);
+		return $response->withJSON([
+			"code" 	   =>  "success",
+			"request"  =>  "post",
+			"redirect" =>  "/users",
+			"title"    =>  "Success",
+			"message"  =>  "User has been successfully created",			
+		]);
 	}
 
+	public function getCurrentUser($request, $response, $args) {
+		$params = $request->getParsedBody();
+
+		$users = new Users;
+		$users = $users->where('uuid', $args['uuid'])->first();
+
+		return $response->withJSON($users);
+	}
+
+	public function fetchUser($request, $response, $args) {
+
+		$params = $request->getParsedBody();
+
+		$users = new Users;
+		$users = $users->where('uuid', $args['uuid'])->first();
+
+		return $response->withJSON([
+			"code" => "users",
+			"data" => $users,
+		]);	
+	}
+
+	public function updateUser($request, $response, $args) {
+
+		$params = $request->getParsedBody();
+
+		$rules = [
+			"first_name"  => "required|alpha_spaces|max:100",
+	        "middle_name" => "required|alpha_spaces|max:100",
+			"last_name"   => "required|alpha_spaces|max:100",
+			"username"    => "required|alpha_num|min:6|max:50",
+	        "status"      => "required",
+	        "role"        => "required",
+		];
+
+		$validator = new ValidatorFactory();
+		$v = $validator->make($params['data'], $rules);
+
+		if ($v->passes()) {
+			$users = new Users;
+			$users->where('uuid', $args['uuid'])->update($params['data']);
+		}
+		else{
+			return $response->withJSON([
+				"code" => "error", 
+				"module" => "users", 
+				"errors" => $v->errors()
+			]);
+		}
+
+		return $response->withJSON([
+			"code" => "success", 
+			"title" => "Success", 
+			"message" => "User has been successfully updated",
+			"request" => "update",
+			"redirect" => "/users"
+		]);
+	}
 
 	/*
-	public function add($request,$response, $args)
-	{
-		$params = $request->getParsedBody();
-
-		$table = new Table;
-		
-		if($table->validate($params)){
-			$table->save();
-		}else{
-			return $response->withJSON($table->errors());
-		}
-
-	
-
-		return $response->withJSON(["message" => "Successfully Created"]);
-	}
-
-
-	public function update($request,$response, $args)
-	{
-
-		$params = $request->getParsedBody();
-
-		Table::where('id',$args['id'])->update($params);
-
-
-		return $response->withJSON(["message" => "Successfully Updated"]);
-	}
-
-
 	public function delete($request,$response, $args)
 	{
 		$flight = Table::find($args['id']);

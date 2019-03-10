@@ -3,9 +3,15 @@
 
 $container = $app->getContainer();
 
-use Illuminate\Database\Capsule\Manager as Capsule;  
-$capsule = new Capsule; 
+use Illuminate\Database\Capsule\Manager as Capsule;
+/**
+ * Added illuminate/events
+**/
+use Illuminate\Events\Dispatcher;
+use Illuminate\Container\Container;
+$capsule = new Capsule;
 $capsule->addConnection($container->get('settings')['database']);
+$capsule->setEventDispatcher(new Dispatcher(new Container));
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
 

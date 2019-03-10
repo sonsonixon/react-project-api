@@ -22,8 +22,11 @@ $app->post("/login", 	"App\Controllers\UsersController:login");
 
 // Users
 $app->group('/users', function () use ($app) {
-	$app->post("/fetch", 	"App\Controllers\UsersController:fetchUsers");
-	$app->post("/create", 	"App\Controllers\UsersController:createUser");
+	$app->get("/get/{uuid}",    "App\Controllers\UsersController:getCurrentUser");
+	$app->post("/fetch", 		 "App\Controllers\UsersController:fetchUsers");
+	$app->post("/create", 		 "App\Controllers\UsersController:createUser");
+	$app->get("/{uuid}",  		 "App\Controllers\UsersController:fetchUser");
+	$app->post("/update/{uuid}", "App\Controllers\UsersController:updateUser");
 	/*
 	$app->post("", 			"App\Controllers\TableController:add");
 	$app->post("/{id}", 	"App\Controllers\TableController:update");

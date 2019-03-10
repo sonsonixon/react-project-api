@@ -5,9 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use ValidatorFactory;
-use App\Traits\Uuids;
 
 use \Firebase\JWT\JWT;
+
+use App\Traits\HasUuid;
 
 /**** DEPRECATED DEPENDECY ****/
 // use Namshi\JOSE\SimpleJWS;
@@ -15,14 +16,12 @@ use \Firebase\JWT\JWT;
 class Users extends Model {
 
 	use SoftDeletes;
-    use Uuids;
+    use HasUuid;
 
-    protected $primaryKey = 'uid';
-	protected $table = "users";
-    protected $keyType = 'string';
-    protected $guarded = ['uid'];
-    protected $fillable = ['uid'];
-    public    $hidden  = ['uid', 'password', 'deleted_at', 'updated_at'];
+    protected $primaryKey = 'uuid';
+	protected $table;
+    protected $guarded = ['uuid'];
+    public    $hidden  = ['password', 'deleted_at', 'updated_at', 'created_at'];
     public    $timestamps = true;
     public    $incrementing = false;
     protected $errors;
@@ -36,11 +35,15 @@ class Users extends Model {
         "role"        => "required",
     ];
 
+    public static function boot() {
+        parent::boot();
+    }
+
     public function checkPassword($password) {
         return password_verify($password, $this->password);
     }
 
-    public function generateToken($uid) {
+    public function generateToken($uuid) {
 
         /*** Firebase/PHP-JWT ***/
 
@@ -48,14 +51,16 @@ class Users extends Model {
         // $decoded = JWT::decode($token, $publicKey, array('RS256'));
         // $decoded_array = (array) $decoded;
 
-        /*** List of possible token payload claims
-         * "typ" => type -> header
-         * "alg" => algorithm -> header
-         * "iss" => issuer -> payload
-         * "aud" => audience -> payload
-         * "iat" => issue at -> payload
-         * "exp" => expiration time -> payload
-         * "auth_time" => authentication time -> payload
+        /*** List of possible token claims
+         *  "typ"       =>  type                ->  header
+         *  "alg"       =>  algorithm           ->  header
+         *  "uid"       =>  unique identifier   ->  payload
+         *  "iss"       =>  issuer              ->  payload
+         *  "aud"       =>  audience            ->  payload
+         *  "iat"       =>  issue at            ->  payload
+         *  "exp"       =>  expiration time     ->  payload
+         *  "auth_time" =>  authentication time ->  payload
+         *  "claims"    =>  optional claims     ->  payload
         ***/
 
         /*** Note: 
@@ -72,7 +77,7 @@ class Users extends Model {
             "aud" => "http://localhost:3000",
             "iat" => $current_time,
             "exp" => $current_time+(60*60), // expires in 1 hour
-            "uid" => $uid,
+            "uid" => $uuid,
         );
 
         $privateKey = openssl_pkey_get_private("file://".__DIR__."/../../keys/id_rsa_jwt.pem");
