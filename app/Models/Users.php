@@ -22,6 +22,7 @@ class Users extends Model {
 	protected $table;
     protected $guarded = ['uuid'];
     public    $hidden  = ['password', 'deleted_at', 'updated_at', 'created_at'];
+    protected $fillable = ['password'];
     public    $timestamps = true;
     public    $incrementing = false;
     protected $errors;

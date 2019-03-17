@@ -3,12 +3,25 @@ namespace App\Controllers;
 
 use App\Models\Users;
 use ValidatorFactory;
-
+  
 class UsersController{
 
 	// protected $dates = ['deleted_at'];
 
 	protected $validator;
+
+	public function join($request, $response, $args) {
+		$users = new Users;
+		$all = $users->join('departments', 'users.department', '=', 'departments.id')
+					 ->select([
+					 	'departments.department AS department', 
+					 	'users.first_name',
+					 	'users.last_name',
+					 ])
+					 ->get();
+
+		return $response->withJSON($all);
+	}
 
 	public function login($request, $response, $args) {
 
@@ -62,6 +75,7 @@ class UsersController{
 		$params['pageSize'] = $params['pageSize'] ?? 10;
 		$total = $users->count();
 		$pages = ceil($total / $params['pageSize']);
+		
 		$users = $users->skip($offset)
 					   ->take($params['pageSize'])
 					   ->orderBy('created_at', 'DESC')
@@ -83,18 +97,16 @@ class UsersController{
 		}
 		else{
 			return $response->withJSON([
-				"code" => "error", 
-				"module" => "users", 
+				"code" => "ERROR",
 				"errors" => $users->errors()
 			]);
 		}
 
 		return $response->withJSON([
-			"code" 	   =>  "success",
-			"request"  =>  "post",
-			"redirect" =>  "/users",
-			"title"    =>  "Success",
-			"message"  =>  "User has been successfully created",			
+			"code" => "SUCCESS",
+			"module" => "USERS",
+			"title" => "Creation Success",
+			"message" => "User has been successfully created",			
 		]);
 	}
 
@@ -112,12 +124,21 @@ class UsersController{
 		$params = $request->getParsedBody();
 
 		$users = new Users;
-		$users = $users->where('uuid', $args['uuid'])->first();
+		$users = $this->validateUuid($args);
+
+		if(is_numeric($users)) {
+			return $response->withJSON([
+				"code" => "NOTFOUND",
+				"title" => "404 Not Found",
+				"message" => "Data not found",
+			]);
+		}
 
 		return $response->withJSON([
-			"code" => "users",
+			"code" => "SUCCESS",
+			"module" => "USERS",
 			"data" => $users,
-		]);	
+		]);
 	}
 
 	public function updateUser($request, $response, $args) {
@@ -142,19 +163,70 @@ class UsersController{
 		}
 		else{
 			return $response->withJSON([
-				"code" => "error", 
-				"module" => "users", 
+				"code" => "ERROR",
 				"errors" => $v->errors()
 			]);
 		}
 
 		return $response->withJSON([
-			"code" => "success", 
-			"title" => "Success", 
+			"code" => "SUCCESS",
+			"title" => "Success",
 			"message" => "User has been successfully updated",
-			"request" => "update",
-			"redirect" => "/users"
 		]);
+	}
+
+	public function changePassword($request, $response, $args) {
+
+		$params = $request->getParsedBody();
+		$password = $params['data']['password'];
+
+		$users = new Users;
+
+		$users = $this->validateUuid($args);
+
+		if(is_numeric($users)) {
+			return $response->withJSON([
+				"code" => "NOTFOUND",
+				"title" => "404 Not Found",
+				"message" => "Data not found",
+			]);
+		}
+
+		$rules = [
+			"password"  => "required|min:8|max:250|confirmed",
+		];
+
+		$validator = new ValidatorFactory();
+		$v = $validator->make($params['data'], $rules);
+
+		if($v->passes()){
+			$users = $users->find($args['uuid']);	
+			$users->password = password_hash($password, PASSWORD_DEFAULT);
+			$users->save();
+		} else {
+			return $response->withJSON([
+				"code" => "ERROR",
+				"errors" => $v->errors(),
+			]);
+		}
+
+		return $response->withJSON([
+			"code" => "SUCCESS",
+			"title" => "Success",
+			"message" => "Password has been successfully update",
+		]);
+	}
+
+	public function validateUuid($args) {
+
+		$users = new Users;
+		$users = $users->where('uuid', $args['uuid'])->first();
+
+		if(!$users) {
+			return 404;
+		}
+
+		return $users;
 	}
 
 	/*
